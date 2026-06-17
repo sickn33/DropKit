@@ -14,7 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Resources (`Assets.xcassets`, privacy manifest) were not bundled because `project.yml` used an invalid `resources:` target key; moved them under `sources:` so the app icon and privacy manifest are now compiled into the build.
-- Drag and shake global event monitors now check Accessibility permission before registering, adding a second code-level guard around the optional shake gesture.
+- **App Store rejection (Guideline 2.4.5):** removed all use of macOS Accessibility features. The optional shake-to-show-shelf gesture only ever observed mouse-drag events (`NSEvent.addGlobalMonitorForEvents` for `.leftMouseDragged` / `.leftMouseUp`), which per AppKit documentation do **not** require Accessibility permission. The app no longer calls `AXIsProcessTrusted`, no longer requests Accessibility permission, and the permission prompt/onboarding (`PermissionChecker`, `PermissionGuideView`, `PermissionGuideWindow`) has been removed. This also restores the shake gesture for users who had not granted the (unnecessary) permission.
+
+### Changed
+- Bumped build number (`CURRENT_PROJECT_VERSION`) to `1.0.7` for App Store resubmission.
 
 ## [1.0.6] - 2026-04-24
 

@@ -11,7 +11,6 @@ class ShakeDetector {
 
     // 性能优化：数组大小上限，防止长时间拖拽时无限增长
     private let maxDirectionChanges = 20
-    private let permissionChecker: () -> Bool
     private let eventMonitor: any GlobalEventMonitoring
 
     // 配置参数（从 AppSettings 读取）
@@ -21,17 +20,13 @@ class ShakeDetector {
 
     var onShake: (() -> Void)?
 
-    init(
-        permissionChecker: @escaping () -> Bool = PermissionChecker.checkAccessibilityPermission,
-        eventMonitor: any GlobalEventMonitoring = AppKitGlobalEventMonitor()
-    ) {
-        self.permissionChecker = permissionChecker
+    init(eventMonitor: any GlobalEventMonitoring = AppKitGlobalEventMonitor()) {
         self.eventMonitor = eventMonitor
     }
 
+    // 同 DragMonitor：监控鼠标事件无需辅助功能权限，不做权限门控。
     @discardableResult
     func start() -> Bool {
-        guard permissionChecker() else { return false }
         guard monitor == nil else { return true }
 
         guard let monitor = eventMonitor.addGlobalMonitor(matching: [.leftMouseDragged], handler: { [weak self] event in

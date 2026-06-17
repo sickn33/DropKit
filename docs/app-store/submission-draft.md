@@ -30,20 +30,16 @@ DropKit focuses on fast access, low overhead, and native macOS behavior for ever
 - Smoother shelf scrolling and selection with lazy-loaded thumbnails.
 - General stability and performance improvements.
 
-## Accessibility Permission Explanation
+## Permissions
 
-DropKit uses Accessibility permission only for the optional shake gesture used while dragging files. If Accessibility permission is not granted, DropKit does not register its global drag/shake event monitors. The app still works through the menu bar, keyboard shortcuts, clipboard history, and user-selected watched folders.
+DropKit does **not** use macOS Accessibility features and does **not** request Accessibility permission. The optional shake-to-show-shelf gesture is implemented with standard global mouse-event monitoring (`NSEvent.addGlobalMonitorForEvents` for mouse-drag events), which per AppKit documentation does not require Accessibility access. The only entitlements are App Sandbox and user-selected file read/write (for the optional watched-folder feature).
 
 ## Review Notes
 
 - DropKit is a menu bar app for temporary file staging and clipboard history.
-- Accessibility permission is used only to observe global drag-related mouse movement for the optional shake-to-show shelf gesture.
-- DropKit checks Accessibility permission before registering global drag/shake monitors and does not start those monitors when permission is missing.
-- Core app functionality remains available without Accessibility permission:
-  - menu bar access
-  - keyboard shortcuts
-  - clipboard history
-  - watched-folder import
+- The app does **not** use Accessibility features and does **not** request Accessibility permission.
+- The optional shake-to-show-shelf gesture observes global mouse-drag events via `NSEvent.addGlobalMonitorForEvents` (mouse events only), which per AppKit documentation does not require Accessibility access.
+- Core features: menu bar access, keyboard shortcuts (via in-app shortcut recorder), clipboard history, and user-selected watched folders.
 - The Mac App Store version does not include an external updater or GitHub download flow.
 - Watched folders are user-selected explicitly through an open panel and stored using sandbox-compatible bookmarks.
 
