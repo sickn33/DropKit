@@ -6,7 +6,6 @@ import SwiftUI
 class AppDelegate: NSObject, NSApplicationDelegate {
     var shelfPanel: ShelfPanel?
     var clipboardHistoryPanel: ClipboardHistoryPanel?
-    var permissionGuideWindow: PermissionGuideWindow?
     var settingsWindow: NSWindow?
     let dragMonitor = DragMonitor()
     let shakeDetector = ShakeDetector()
@@ -14,7 +13,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let menuBarController = MenuBarController()
     let folderMonitor = FolderMonitor()
     private var didSetupApp = false
-    private var accessibilityFeaturesEnabled = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // 菜单栏必须无条件设置，确保用户始终可以访问设置和退出
@@ -22,11 +20,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupApp()
 
-        if PermissionChecker.checkAccessibilityPermission() {
-            enableAccessibilityFeatures()
-        } else {
-            showPermissionGuide()
-        }
+        // 摇晃召唤搁架依赖的是全局鼠标事件监控，无需辅助功能权限，直接启用。
+        setupDragAndShake()
     }
 
     private func setupApp() {
@@ -44,21 +39,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupKeyboardShortcuts()
         setupFolderMonitor()
-    }
-
-    private func enableAccessibilityFeatures() {
-        guard !accessibilityFeaturesEnabled else { return }
-        accessibilityFeaturesEnabled = true
-        setupDragAndShake()
-    }
-
-    private func showPermissionGuide() {
-        permissionGuideWindow = PermissionGuideWindow()
-        permissionGuideWindow?.onPermissionGranted = { [weak self] in
-            self?.permissionGuideWindow = nil
-            self?.enableAccessibilityFeatures()
-        }
-        permissionGuideWindow?.showWindow()
     }
 
     private func setupMenuBar() {

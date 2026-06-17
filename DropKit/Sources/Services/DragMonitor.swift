@@ -21,23 +21,19 @@ class DragMonitor {
 
     private var dragMonitor: Any?
     private var upMonitor: Any?
-    private let permissionChecker: () -> Bool
     private let eventMonitor: any GlobalEventMonitoring
 
     var onDragStart: (() -> Void)?
     var onDragEnd: (() -> Void)?
 
-    init(
-        permissionChecker: @escaping () -> Bool = PermissionChecker.checkAccessibilityPermission,
-        eventMonitor: any GlobalEventMonitoring = AppKitGlobalEventMonitor()
-    ) {
-        self.permissionChecker = permissionChecker
+    init(eventMonitor: any GlobalEventMonitoring = AppKitGlobalEventMonitor()) {
         self.eventMonitor = eventMonitor
     }
 
+    // 监控的是鼠标事件（leftMouseDragged / leftMouseUp）。按 Apple 文档，
+    // 全局监控鼠标事件无需辅助功能权限（只有键盘事件才需要），故此处不做任何权限门控。
     @discardableResult
     func start() -> Bool {
-        guard permissionChecker() else { return false }
         guard dragMonitor == nil, upMonitor == nil else { return true }
 
         guard let dragMonitor = eventMonitor.addGlobalMonitor(matching: .leftMouseDragged, handler: { [weak self] _ in

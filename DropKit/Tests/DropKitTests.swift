@@ -2,26 +2,21 @@ import XCTest
 @testable import DropKit
 
 final class DropKitTests: XCTestCase {
-    func testDragMonitorDoesNotRegisterGlobalEventsWithoutAccessibilityPermission() {
+    func testDragMonitorRegistersGlobalMouseMonitorsOnStart() {
+        // 摇晃/拖拽依赖鼠标事件监控，无需辅助功能权限，start() 应无条件注册全局监控。
         let eventMonitor = RecordingGlobalEventMonitor()
-        let monitor = DragMonitor(
-            permissionChecker: { false },
-            eventMonitor: eventMonitor
-        )
+        let monitor = DragMonitor(eventMonitor: eventMonitor)
 
-        XCTAssertFalse(monitor.start())
-        XCTAssertTrue(eventMonitor.addedMasks.isEmpty)
+        XCTAssertTrue(monitor.start())
+        XCTAssertEqual(eventMonitor.addedMasks.count, 2)  // leftMouseDragged + leftMouseUp
     }
 
-    func testShakeDetectorDoesNotRegisterGlobalEventsWithoutAccessibilityPermission() {
+    func testShakeDetectorRegistersGlobalMouseMonitorOnStart() {
         let eventMonitor = RecordingGlobalEventMonitor()
-        let detector = ShakeDetector(
-            permissionChecker: { false },
-            eventMonitor: eventMonitor
-        )
+        let detector = ShakeDetector(eventMonitor: eventMonitor)
 
-        XCTAssertFalse(detector.start())
-        XCTAssertTrue(eventMonitor.addedMasks.isEmpty)
+        XCTAssertTrue(detector.start())
+        XCTAssertEqual(eventMonitor.addedMasks.count, 1)  // leftMouseDragged
     }
 
     func testBuiltInSensitiveClipboardAppsAreAlwaysIgnored() throws {
