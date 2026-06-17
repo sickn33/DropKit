@@ -282,6 +282,7 @@
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					E0EE4F4E64275EE72239E5C9 = {
+						DevelopmentTeam = VXY96PZZXT;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -536,6 +537,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = VXY96PZZXT;
 				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -556,6 +558,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/DropKit.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = VXY96PZZXT;
 				ENABLE_APP_SANDBOX = YES;
 				INFOPLIST_FILE = Sources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

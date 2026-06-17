@@ -58,6 +58,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.dropkit.DropKit
         PRODUCT_NAME: DropKit
         CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: VXY96PZZXT
       configs:
         Debug:
           DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
