@@ -4,6 +4,7 @@
 
 > DropKit 是一款 macOS 菜单栏工具，提供「拖拽时摇晃鼠标唤出」的悬浮文件暂存架和可搜索的剪贴板历史。
 
+[![Mac App Store 下载](https://img.shields.io/badge/Mac%20App%20Store-%E4%B8%8B%E8%BD%BD-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/app/dropkit-clipboard/id6778846792)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey.svg)
 ![Version](https://img.shields.io/badge/version-1.0.6-green.svg)
@@ -43,17 +44,19 @@
 
 ## 快速开始 / 安装
 
-DropKit 正在准备上架 Mac App Store。在商店版本发布前，请通过源码构建安装：
+### 从 Mac App Store 下载（推荐）
 
-### 环境要求
+**[在 Mac App Store 下载 DropKit Clipboard](https://apps.apple.com/app/dropkit-clipboard/id6778846792)** —— 最省事的安装方式，自动更新。需要 macOS 14.0 (Sonoma) 及以上。DropKit 开箱即用，**无需辅助功能或任何特殊权限**。
+
+### 从源码构建（面向开发者）
+
+DropKit 是开源项目，也可以自己构建：
 
 | 依赖 | 版本 |
 |------|------|
 | macOS | 14.0 (Sonoma) 及以上 |
 | Xcode | 15.0 及以上 |
 | XcodeGen | 最新版（`brew install xcodegen`） |
-
-### 从源码构建
 
 ```bash
 git clone https://github.com/chenyuxiaojin/DropKit.git
@@ -63,17 +66,6 @@ xcodebuild -scheme DropKit -configuration Release build
 ```
 
 构建产物 `DropKit.app` 位于 `build/Release/` 目录，移动到 `/Applications` 后启动即可。
-
-### 授予辅助功能权限
-
-DropKit 需要辅助功能权限来检测鼠标摇晃手势：
-
-1. 打开 **系统设置 → 隐私与安全性 → 辅助功能**
-2. 点击锁图标并验证身份
-3. 在列表中启用 DropKit
-4. 重启 DropKit 使更改生效
-
-不授予此权限时，摇晃唤出暂存架的功能不可用；剪贴板历史不受影响，仍可正常使用。
 
 ---
 
@@ -125,9 +117,9 @@ DropKit 需要辅助功能权限来检测鼠标摇晃手势：
 
 ## 常见问题
 
-**为什么需要辅助功能权限？**
+**需要辅助功能或其他特殊权限吗？**
 
-摇晃唤出暂存架需要通过 macOS 辅助功能 API（`NSEvent.addGlobalMonitorForEvents`）检测拖拽过程中的鼠标加速度。没有该权限，系统会阻止全局鼠标事件监听。此权限仅用于摇晃检测——DropKit 不读取屏幕内容，也不控制其他应用。
+不需要。DropKit 无需辅助功能权限即可工作。摇晃唤出暂存架是通过标准的全局鼠标事件监听（`NSEvent.addGlobalMonitorForEvents` 监听鼠标拖拽事件）实现的，macOS 允许在不授予任何特殊权限的情况下完成这件事。DropKit 不读取屏幕内容，也不控制其他应用。
 
 **怎么唤出暂存架？**
 
@@ -140,7 +132,7 @@ DropKit 需要辅助功能权限来检测鼠标摇晃手势：
 
 **怎么安装 DropKit？**
 
-目前仅支持源码安装（App Store 版本准备中）。克隆仓库，依次运行 `xcodegen generate` 和 `xcodebuild`，将生成的 `DropKit.app` 移动到 `/Applications` 即可。详见上方[从源码构建](#从源码构建)步骤。
+最简单的方式是[从 Mac App Store 下载](https://apps.apple.com/app/dropkit-clipboard/id6778846792)。想自己构建？克隆仓库，依次运行 `xcodegen generate` 和 `xcodebuild`，将生成的 `DropKit.app` 移动到 `/Applications` 即可。完整步骤见上方「从源码构建（面向开发者）」一节。
 
 **能限制剪贴板历史保存多少条吗？**
 
@@ -151,7 +143,7 @@ DropKit 需要辅助功能权限来检测鼠标摇晃手势：
 ## 系统要求
 
 - macOS 14.0 (Sonoma) 及以上
-- 辅助功能权限（仅摇晃唤出暂存架功能需要）
+- 无需任何特殊权限
 
 ---
 

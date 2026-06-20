@@ -4,6 +4,7 @@
 
 > DropKit is a macOS menu bar utility with a shake-to-summon floating file shelf and a searchable clipboard history.
 
+[![Download on the Mac App Store](https://img.shields.io/badge/Mac%20App%20Store-Download-0D96F6?logo=apple&logoColor=white)](https://apps.apple.com/app/dropkit-clipboard/id6778846792)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-macOS%2014%2B-lightgrey.svg)
 ![Version](https://img.shields.io/badge/version-1.0.6-green.svg)
@@ -43,17 +44,19 @@ Moving files between apps on macOS has always been awkward: open Finder, arrange
 
 ## Quick Start / Installation
 
-DropKit is being prepared for Mac App Store distribution. Until the store version is available, build from source:
+### Download from the Mac App Store (recommended)
 
-### Prerequisites
+**[Download DropKit Clipboard on the Mac App Store](https://apps.apple.com/app/dropkit-clipboard/id6778846792)** — the simplest way to install, with automatic updates. Requires macOS 14.0 (Sonoma) or later. DropKit works out of the box and does **not** require Accessibility or any other special permission.
+
+### Build from Source (for developers)
+
+DropKit is open source. To build it yourself:
 
 | Requirement | Version |
 |-------------|---------|
 | macOS | 14.0 (Sonoma) or later |
 | Xcode | 15.0 or later |
 | XcodeGen | latest (`brew install xcodegen`) |
-
-### Build from Source
 
 ```bash
 git clone https://github.com/chenyuxiaojin/DropKit.git
@@ -63,17 +66,6 @@ xcodebuild -scheme DropKit -configuration Release build
 ```
 
 The built `.app` appears in `build/Release/DropKit.app`. Move it to `/Applications` and launch.
-
-### Grant Accessibility Permission
-
-DropKit needs Accessibility permission to detect mouse shake gestures:
-
-1. Open **System Settings → Privacy & Security → Accessibility**
-2. Click the lock icon and authenticate
-3. Enable DropKit in the list
-4. Restart DropKit for the change to take effect
-
-Without this permission the shelf shake-summon feature is unavailable; clipboard history still works.
 
 ---
 
@@ -125,9 +117,9 @@ Without this permission the shelf shake-summon feature is unavailable; clipboard
 
 ## FAQ
 
-**Why does DropKit need Accessibility permission?**
+**Does DropKit need Accessibility or any special permission?**
 
-The shake-to-summon shelf detects mouse acceleration during a drag gesture using macOS's Accessibility APIs (`NSEvent.addGlobalMonitorForEvents`). Without this permission the OS blocks global mouse event monitoring. The permission is only used for shake detection — DropKit does not read screen content or control other apps.
+No. DropKit works without Accessibility permission. The shake-to-summon shelf detects mouse-drag movement using standard global mouse-event monitoring (`NSEvent.addGlobalMonitorForEvents` for mouse-drag events), which macOS allows without any special permission. DropKit does not read screen content or control other apps.
 
 **How do I summon the shelf?**
 
@@ -140,7 +132,7 @@ Common password managers are also skipped by default, even before you add any cu
 
 **How do I install DropKit?**
 
-DropKit is currently source-only (App Store release in progress). Clone the repo, run `xcodegen generate` then `xcodebuild`, and move the resulting `DropKit.app` to `/Applications`. See [Build from Source](#build-from-source) above for full steps.
+The easiest way is to [download it from the Mac App Store](https://apps.apple.com/app/dropkit-clipboard/id6778846792). Prefer to build it yourself? Clone the repo, run `xcodegen generate` then `xcodebuild`, and move the resulting `DropKit.app` to `/Applications`. See [Build from Source](#build-from-source-for-developers) above for full steps.
 
 **Can I set a limit on how many items the clipboard history keeps?**
 
@@ -151,7 +143,7 @@ Yes. Open **Settings → Clipboard** to configure the maximum item count and the
 ## Requirements
 
 - macOS 14.0 (Sonoma) or later
-- Accessibility permission (for shake-to-summon shelf only)
+- No special permissions required
 
 ---
 
