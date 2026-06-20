@@ -130,6 +130,22 @@ final class DropKitTests: XCTestCase {
         viewModel.clearAll()
     }
 
+    @MainActor
+    func testThumbnailGenerationWorksForNewItemsByDefault() async throws {
+        let viewModel = ShelfViewModel()
+        let fileURL = try makeTemporaryPNG()
+
+        XCTAssertTrue(viewModel.addItem(url: fileURL))
+        guard let itemId = viewModel.items.first?.id else {
+            return XCTFail("Expected inserted item")
+        }
+
+        viewModel.ensureThumbnail(for: itemId, kind: .large)
+        try await Task.sleep(nanoseconds: 300_000_000)
+
+        XCTAssertNotNil(viewModel.items.first?.thumbnail)
+    }
+
     func testLatestWorkDebouncerRunsOnlyMostRecentScheduledWork() {
         let debouncer = LatestWorkDebouncer()
         let queue = DispatchQueue(label: "DropKitTests.LatestWorkDebouncer")
@@ -202,6 +218,33 @@ final class DropKitTests: XCTestCase {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let fileURL = directory.appendingPathComponent("screenshot.png")
         try Data("dropkit".utf8).write(to: fileURL)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: directory)
+        }
+        return fileURL
+    }
+
+    private func makeTemporaryPNG() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let fileURL = directory.appendingPathComponent("image.png")
+
+        let image = NSImage(size: NSSize(width: 8, height: 8))
+        image.lockFocus()
+        NSColor.systemBlue.setFill()
+        NSRect(x: 0, y: 0, width: 8, height: 8).fill()
+        image.unlockFocus()
+
+        guard
+            let tiffData = image.tiffRepresentation,
+            let bitmap = NSBitmapImageRep(data: tiffData),
+            let pngData = bitmap.representation(using: .png, properties: [:])
+        else {
+            throw XCTSkip("Failed to create test PNG")
+        }
+
+        try pngData.write(to: fileURL)
         addTeardownBlock {
             try? FileManager.default.removeItem(at: directory)
         }
