@@ -16,6 +16,9 @@ Packages/
 # Claude Code
 .claude/
 
+# Playwright CLI
+.playwright-cli/
+
 # Release builds
 releases/
 release/
