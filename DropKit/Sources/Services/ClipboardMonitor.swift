@@ -1,11 +1,11 @@
 import AppKit
 
 enum ClipboardFilterType: String, CaseIterable {
-    case all = "全部"
-    case text = "文本"
-    case image = "图片"
-    case file = "文件"
-    case favorites = "收藏"
+    case all = "All"
+    case text = "Text"
+    case image = "Images"
+    case file = "Files"
+    case favorites = "Favorites"
 }
 
 @Observable

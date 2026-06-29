@@ -11,10 +11,10 @@ struct AppPickerView: View {
         VStack(spacing: 0) {
             // 标题栏
             HStack {
-                Text("选择应用")
+                Text("Choose Apps")
                     .font(.headline)
                 Spacer()
-                Button("完成") {
+                Button("Done") {
                     dismiss()
                 }
                 .buttonStyle(.borderedProminent)
@@ -27,7 +27,7 @@ struct AppPickerView: View {
             HStack(spacing: 6) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(.secondary)
-                TextField("搜索应用...", text: $searchText)
+                TextField("Search apps...", text: $searchText)
                     .textFieldStyle(.plain)
                 if !searchText.isEmpty {
                     Button {

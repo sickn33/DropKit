@@ -105,7 +105,7 @@ struct ClipboardHistoryView: View {
                     .foregroundStyle(.secondary)
                     .font(.system(size: 13))
 
-                TextField("搜索剪切板...", text: Binding(
+                TextField("Search clipboard...", text: Binding(
                     get: { monitor.searchText },
                     set: {
                         monitor.searchText = $0
@@ -216,11 +216,11 @@ struct ClipboardHistoryView: View {
 
     private var emptyStateText: String {
         if !monitor.searchText.isEmpty {
-            return "未找到匹配项"
+            return "No matches found"
         }
         switch monitor.selectedFilter {
-        case .favorites: return "暂无收藏"
-        default: return "暂无剪切板历史"
+        case .favorites: return "No favorites yet"
+        default: return "No clipboard history yet"
         }
     }
 
@@ -258,7 +258,7 @@ struct ClipboardHistoryView: View {
         HStack(spacing: 6) {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
-            Text("已复制到剪切板")
+            Text("Copied to clipboard")
                 .font(.system(size: 12))
                 .foregroundStyle(.primary)
         }
@@ -282,11 +282,11 @@ struct ClipboardHistoryView: View {
             VStack(spacing: 0) {
                 // 标题栏
                 HStack {
-                    Text("内容预览")
+                    Text("Preview")
                         .font(.system(size: 14, weight: .semibold))
                     Spacer()
                     // 空格键提示
-                    Text("空格关闭")
+                    Text("Space to close")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }
@@ -365,7 +365,7 @@ struct ClipboardHistoryView: View {
                     Image(systemName: "photo")
                         .font(.system(size: 32))
                         .foregroundStyle(.secondary)
-                    Text("图片不可用")
+                    Text("Image unavailable")
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
                 }

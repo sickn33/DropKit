@@ -210,17 +210,17 @@ class ShelfViewModel {
         let otherCount = items.filter { $0.fileType == .other }.count
 
         var parts: [String] = []
-        if imageCount > 0 { parts.append("\(imageCount)张图片") }
-        if videoCount > 0 { parts.append("\(videoCount)个视频") }
-        if docCount > 0 { parts.append("\(docCount)个文档") }
-        if otherCount > 0 { parts.append("\(otherCount)个文件") }
+        if imageCount > 0 { parts.append("\(imageCount) image\(imageCount == 1 ? "" : "s")") }
+        if videoCount > 0 { parts.append("\(videoCount) video\(videoCount == 1 ? "" : "s")") }
+        if docCount > 0 { parts.append("\(docCount) document\(docCount == 1 ? "" : "s")") }
+        if otherCount > 0 { parts.append("\(otherCount) file\(otherCount == 1 ? "" : "s")") }
 
         if parts.isEmpty {
-            return "无文件"
+            return "No files"
         } else if parts.count == 1 {
             return parts[0]
         } else {
-            return "\(items.count)个文件"
+            return "\(items.count) files"
         }
     }
 

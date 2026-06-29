@@ -42,7 +42,7 @@ class FolderMonitor {
     private let eventDebouncer = LatestWorkDebouncer()
 
     /// 每次 start / stop 都会 +1。用于让 queue 上 asyncAfter 的延迟任务自行作废，
-    /// 防止"0.3s 窗口内 stop → start 新目录"导致旧任务污染新状态。
+    /// Prevents old tasks from polluting the new state after a stop/start within 0.3 seconds.
     private var generation: UInt64 = 0
 
     /// 新文件回调
@@ -79,7 +79,7 @@ class FolderMonitor {
         guard FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory),
               isDirectory.boolValue else {
             #if DEBUG
-            print("FolderMonitor: 路径不存在或不是目录: \(url.path)")
+            print("FolderMonitor: path does not exist or is not a directory: \(url.path)")
             #endif
             stop()
             return
@@ -92,7 +92,7 @@ class FolderMonitor {
         fileDescriptor = open(url.path, O_EVTONLY)
         guard fileDescriptor >= 0 else {
             #if DEBUG
-            print("FolderMonitor: 无法打开目录: \(url.path)")
+            print("FolderMonitor: could not open directory: \(url.path)")
             #endif
             stop()
             return
@@ -119,7 +119,7 @@ class FolderMonitor {
         source?.resume()
 
         #if DEBUG
-        print("FolderMonitor: 开始监听 \(url.path)")
+        print("FolderMonitor: started watching \(url.path)")
         #endif
     }
 
@@ -138,7 +138,7 @@ class FolderMonitor {
         }
 
         #if DEBUG
-        print("FolderMonitor: 停止监听")
+        print("FolderMonitor: stopped watching")
         #endif
     }
 
@@ -187,7 +187,7 @@ class FolderMonitor {
             }
 
             #if DEBUG
-            print("FolderMonitor: 检测到新文件 \(fileName)")
+            print("FolderMonitor: detected new file \(fileName)")
             #endif
 
             // 在主线程回调前再次校验 generation

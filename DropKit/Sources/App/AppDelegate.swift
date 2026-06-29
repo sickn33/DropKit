@@ -207,9 +207,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingController = NSHostingController(rootView: settingsView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "DropKit 设置"
+        window.title = "DropKit Settings"
         window.styleMask = [.titled, .closable]
-        window.setContentSize(NSSize(width: 400, height: 340))
+        window.setContentSize(NSSize(width: 520, height: 440))
         window.center()
         window.makeKeyAndOrderFront(nil)
 

@@ -34,7 +34,7 @@ struct ClipboardItem: Identifiable, Codable {
             return URL(fileURLWithPath: content).lastPathComponent
         case .image:
             if content.isEmpty {
-                return "图片"
+                return "Image"
             }
             let url = URL(fileURLWithPath: content)
             return url.lastPathComponent
@@ -75,7 +75,7 @@ struct ClipboardItem: Identifiable, Codable {
     // 共享的日期格式化器，避免重复创建
     private static let relativeDateFormatter: RelativeDateTimeFormatter = {
         let formatter = RelativeDateTimeFormatter()
-        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.locale = Locale(identifier: "en_US")
         formatter.unitsStyle = .short
         return formatter
     }()

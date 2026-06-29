@@ -13,9 +13,9 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             // 自定义 Tab 选择器
             Picker("", selection: $selectedTab) {
-                Text("通用").tag(0)
-                Text("悬浮窗").tag(1)
-                Text("剪切板").tag(2)
+                Text("General").tag(0)
+                Text("Shelf").tag(1)
+                Text("Clipboard").tag(2)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 80)
@@ -36,7 +36,7 @@ struct SettingsView: View {
                 }
             }
         }
-        .frame(width: 420, height: 400)
+        .frame(width: 520, height: 440)
         .background(.background)
     }
 
@@ -45,36 +45,36 @@ struct SettingsView: View {
     private var generalTab: some View {
         Form {
             Section {
-                Toggle("开机自启动", isOn: $settings.launchAtLogin)
+                Toggle("Launch at login", isOn: $settings.launchAtLogin)
             } header: {
-                Text("启动")
+                Text("Startup")
             }
 
             Section {
-                LabeledContent("显示悬浮窗") {
+                LabeledContent("Show shelf") {
                     KeyboardShortcuts.Recorder(for: .showShelf)
                 }
-                LabeledContent("剪切板历史") {
+                LabeledContent("Clipboard history") {
                     KeyboardShortcuts.Recorder(for: .showClipboardHistory)
                 }
-                LabeledContent("设置") {
+                LabeledContent("Settings") {
                     KeyboardShortcuts.Recorder(for: .showSettings)
                 }
             } header: {
-                Text("快捷键")
+                Text("Keyboard Shortcuts")
             }
 
             Section {
-                LabeledContent("当前版本") {
+                LabeledContent("Current version") {
                     Text(Bundle.main.shortVersionString)
                         .foregroundColor(.secondary)
                 }
 
-                Text("App Store 版本会通过系统商店分发更新。")
+                Text("The App Store version is distributed and updated through the system store.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             } header: {
-                Text("关于")
+                Text("About")
             }
         }
         .formStyle(.grouped)
@@ -85,72 +85,72 @@ struct SettingsView: View {
     private var shelfTab: some View {
         Form {
             Section {
-                LabeledContent("摇晃次数") {
-                    Stepper("\(settings.shakeMinShakes) 次", value: $settings.shakeMinShakes, in: 2...8)
+                LabeledContent("Shake count") {
+                    Stepper("\(settings.shakeMinShakes)x", value: $settings.shakeMinShakes, in: 2...8)
                         .frame(width: 100)
                 }
 
-                LabeledContent("时间窗口") {
+                LabeledContent("Time window") {
                     HStack {
                         Slider(value: $settings.shakeTimeWindow, in: 0.2...0.8, step: 0.05)
                             .frame(width: 120)
-                        Text("\(String(format: "%.2f", settings.shakeTimeWindow)) 秒")
+                        Text("\(String(format: "%.2f", settings.shakeTimeWindow)) s")
                             .monospacedDigit()
                             .frame(width: 55, alignment: .trailing)
                     }
                 }
 
-                LabeledContent("最小移动") {
+                LabeledContent("Min movement") {
                     HStack {
                         Slider(value: $settings.shakeMinMovement, in: 10...60, step: 5)
                             .frame(width: 120)
-                        Text("\(Int(settings.shakeMinMovement)) 像素")
+                        Text("\(Int(settings.shakeMinMovement)) px")
                             .monospacedDigit()
                             .frame(width: 55, alignment: .trailing)
                     }
                 }
             } header: {
-                Text("摇晃触发")
+                Text("Shake Trigger")
             }
 
             Section {
-                Toggle("启用文件夹监听", isOn: $settings.folderMonitorEnabled)
+                Toggle("Enable folder watching", isOn: $settings.folderMonitorEnabled)
 
-                LabeledContent("文件夹") {
+                LabeledContent("Folder") {
                     HStack {
-                        Text(settings.watchedFolderPath ?? "未选择")
+                        Text(settings.watchedFolderPath ?? "Not selected")
                             .foregroundColor(settings.watchedFolderPath == nil ? .secondary : .primary)
                             .lineLimit(1)
                             .truncationMode(.middle)
                             .frame(maxWidth: 150, alignment: .leading)
-                        Button("选择...") {
+                        Button("Choose...") {
                             selectFolder()
                         }
                     }
                 }
 
-                Button("选择建议的截图文件夹...") {
+                Button("Choose suggested screenshots folder...") {
                     selectFolder(suggestedURL: FolderMonitor.getScreenshotFolderURL())
                 }
 
                 if settings.watchedFolderPath != nil {
-                    Button("清除已选文件夹", role: .destructive) {
+                    Button("Clear selected folder", role: .destructive) {
                         settings.clearWatchedFolder()
                     }
                 }
             } header: {
-                Text("文件夹监听")
+                Text("Folder Watch")
             } footer: {
-                Text("出于沙盒限制，监听目录必须由你手动选择授权。")
+                Text("Because of sandboxing, watched folders must be selected and authorized manually.")
             }
 
             Section {
-                Toggle("自动复制到剪切板", isOn: $settings.autoCopyToClipboard)
-                Toggle("自动显示悬浮窗", isOn: $settings.autoShowShelfOnNewFile)
+                Toggle("Automatically copy to clipboard", isOn: $settings.autoCopyToClipboard)
+                Toggle("Automatically show shelf", isOn: $settings.autoShowShelfOnNewFile)
             } header: {
-                Text("新文件行为")
+                Text("New File Behavior")
             } footer: {
-                Text("新文件出现时自动复制路径，可直接 Cmd+V 粘贴")
+                Text("When a new file appears, copy its path so you can paste it with Command-V.")
             }
         }
         .formStyle(.grouped)
@@ -161,39 +161,39 @@ struct SettingsView: View {
     private var clipboardTab: some View {
         Form {
             Section {
-                LabeledContent("保留时长") {
+                LabeledContent("Retention") {
                     HStack(spacing: 4) {
                         TextField("", value: $settings.clipboardRetentionDays, format: .number)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 60)
                             .multilineTextAlignment(.center)
-                        Text("天")
+                        Text("days")
                     }
                 }
 
-                LabeledContent("最大条数") {
+                LabeledContent("Max items") {
                     HStack(spacing: 4) {
                         TextField("", value: $settings.clipboardMaxItems, format: .number)
                             .textFieldStyle(.roundedBorder)
                             .frame(width: 60)
                             .multilineTextAlignment(.center)
-                        Text("条")
+                        Text("items")
                     }
                 }
             } header: {
-                Text("历史记录")
+                Text("History")
             } footer: {
-                Text("输入 0 表示永久保留，仅统计和删除未收藏条目")
+                Text("Use 0 to keep items indefinitely. Limits apply only to non-favorite items.")
             }
 
             Section {
-                Toggle("忽略密码管理器内容", isOn: $settings.ignoreConcealed)
+                Toggle("Ignore password manager content", isOn: $settings.ignoreConcealed)
             } footer: {
-                Text("自动跳过带隐藏标记的复制内容；常见密码管理器始终不会记录。")
+                Text("Automatically skips concealed clipboard content. Common password managers are always ignored.")
             }
 
             Section {
-                Toggle("启用应用黑名单", isOn: $settings.clipboardBlacklistEnabled)
+                Toggle("Enable app blacklist", isOn: $settings.clipboardBlacklistEnabled)
 
                 if settings.clipboardBlacklistEnabled {
                     ForEach(Array(settings.clipboardBlacklist).sorted(), id: \.self) { bundleId in
@@ -210,12 +210,12 @@ struct SettingsView: View {
                         }
                     }
 
-                    Button("添加应用...") {
+                    Button("Add app...") {
                         showAppPicker = true
                     }
                 }
             } footer: {
-                Text("除内置敏感应用外，也可手动指定更多应用。")
+                Text("You can manually exclude more apps in addition to the built-in sensitive-app list.")
             }
 
             Section {
@@ -224,7 +224,7 @@ struct SettingsView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Label("删除所有历史记录", systemImage: "trash")
+                        Label("Delete all history", systemImage: "trash")
                         Spacer()
                     }
                 }
@@ -232,7 +232,7 @@ struct SettingsView: View {
                 if showDeleteSuccess {
                     HStack {
                         Spacer()
-                        Text("已删除所有历史记录")
+                        Text("All history deleted")
                             .foregroundColor(.green)
                         Spacer()
                     }
@@ -240,17 +240,17 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .alert("无法保存文件夹授权", isPresented: Binding(
+        .alert("Could not save folder access", isPresented: Binding(
             get: { folderSelectionError != nil },
             set: { if !$0 { folderSelectionError = nil } }
         )) {
-            Button("确定", role: .cancel) {}
+            Button("OK", role: .cancel) {}
         } message: {
-            Text(folderSelectionError ?? "请选择其他文件夹后重试。")
+            Text(folderSelectionError ?? "Choose another folder and try again.")
         }
-        .alert("确认删除", isPresented: $showDeleteConfirmation) {
-            Button("取消", role: .cancel) { }
-            Button("删除", role: .destructive) {
+        .alert("Confirm Delete", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
                 ClipboardMonitor.shared.clearAll()
                 showDeleteSuccess = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -258,7 +258,7 @@ struct SettingsView: View {
                 }
             }
         } message: {
-            Text("确定要删除所有剪切板历史记录吗？此操作无法撤销。")
+            Text("Delete all clipboard history? This cannot be undone.")
         }
         .sheet(isPresented: $showAppPicker) {
             AppPickerView(selectedBundleIds: $settings.clipboardBlacklist)
@@ -277,12 +277,12 @@ struct SettingsView: View {
         panel.canChooseFiles = false
         panel.canChooseDirectories = true
         panel.allowsMultipleSelection = false
-        panel.message = "选择要监听的文件夹"
+        panel.message = "Choose the folder to watch"
         panel.directoryURL = suggestedURL
 
         if panel.runModal() == .OK, let url = panel.url {
             guard settings.setWatchedFolder(url) else {
-                folderSelectionError = "DropKit 无法保存该文件夹的访问授权。"
+                folderSelectionError = "DropKit could not save access to that folder."
                 return
             }
         }

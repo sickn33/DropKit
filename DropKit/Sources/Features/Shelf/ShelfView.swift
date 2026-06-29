@@ -67,17 +67,17 @@ struct CollapsedShelfView: View {
                 // 省略号菜单按钮（有文件时显示）
                 if !viewModel.items.isEmpty {
                     Menu {
-                        Button("展开查看全部") {
+                        Button("Expand") {
                             viewModel.expand()
                         }
                         Divider()
-                        Button("在 Finder 中显示") {
+                        Button("Show in Finder") {
                             if let firstItem = viewModel.items.first {
                                 NSWorkspace.shared.activateFileViewerSelecting([firstItem.url])
                             }
                         }
                         Divider()
-                        Button("清空所有", role: .destructive) {
+                        Button("Clear All", role: .destructive) {
                             viewModel.clearAll()
                         }
                     } label: {
@@ -116,7 +116,7 @@ struct CollapsedShelfView: View {
     private var emptyStateView: some View {
         VStack(spacing: 12) {
             Spacer()
-            Text("放置你的内容项")
+            Text("Drop items here")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             Spacer()
@@ -189,7 +189,7 @@ struct CollapsedShelfView: View {
             HStack {
                 if viewModel.items.count >= 2 {
                     // 2 个及以上项目时，只显示数量
-                    Text("\(viewModel.items.count) 个项目")
+                    Text("\(viewModel.items.count) items")
                         .font(.caption)
                         .foregroundStyle(.primary)
                 } else if let firstItem = viewModel.items.first {
@@ -269,7 +269,7 @@ struct ExpandedShelfView: View {
                 Text(viewModel.itemCountDescription)
                     .font(.headline)
             } else {
-                Text("已选择 \(viewModel.selectedItemIds.count) 个")
+                Text("\(viewModel.selectedItemIds.count) selected")
                     .font(.headline)
                     .foregroundStyle(Color.accentColor)
             }
@@ -303,33 +303,33 @@ struct ExpandedShelfView: View {
     private var moreActionsMenu: some View {
         Menu {
             if !viewModel.selectedItemIds.isEmpty {
-                Button("在 Finder 中显示选中项") {
+                Button("Show Selected in Finder") {
                     NSWorkspace.shared.activateFileViewerSelecting(viewModel.selectedUrls)
                 }
-                Button("复制到剪切板") {
+                Button("Copy to Clipboard") {
                     copySelectedToClipboard()
                 }
                 Divider()
-                Button("全选") {
+                Button("Select All") {
                     viewModel.selectAll()
                 }
-                Button("取消选择") {
+                Button("Deselect") {
                     viewModel.deselectAll()
                 }
                 Divider()
-                Button("删除选中项", role: .destructive) {
+                Button("Delete Selected", role: .destructive) {
                     viewModel.deleteSelected()
                 }
             } else {
-                Button("在 Finder 中显示全部") {
+                Button("Show All in Finder") {
                     NSWorkspace.shared.activateFileViewerSelecting(viewModel.items.map { $0.url })
                 }
                 Divider()
-                Button("全选") {
+                Button("Select All") {
                     viewModel.selectAll()
                 }
                 Divider()
-                Button("清空所有", role: .destructive) {
+                Button("Clear All", role: .destructive) {
                     viewModel.clearAll()
                 }
             }
@@ -470,13 +470,13 @@ struct GridItemView: View {
             gridItemContent
         }
         .contextMenu {
-            Button("在 Finder 中显示", action: onShowInFinder)
+            Button("Show in Finder", action: onShowInFinder)
             Divider()
             let count = getSelectionCount()
             if isSelected && count > 1 {
-                Button("删除选中的 \(count) 个文件", role: .destructive, action: onDeleteSelected)
+                Button("Delete \(count) selected files", role: .destructive, action: onDeleteSelected)
             } else {
-                Button("删除", role: .destructive, action: onRemove)
+                Button("Delete", role: .destructive, action: onRemove)
             }
         }
         .onAppear(perform: onAppearThumbnail)
@@ -591,13 +591,13 @@ struct ListItemView: View {
             listItemContent
         }
         .contextMenu {
-            Button("在 Finder 中显示", action: onShowInFinder)
+            Button("Show in Finder", action: onShowInFinder)
             Divider()
             let count = getSelectionCount()
             if isSelected && count > 1 {
-                Button("删除选中的 \(count) 个文件", role: .destructive, action: onDeleteSelected)
+                Button("Delete \(count) selected files", role: .destructive, action: onDeleteSelected)
             } else {
-                Button("删除", role: .destructive, action: onRemove)
+                Button("Delete", role: .destructive, action: onRemove)
             }
         }
         .onAppear(perform: onAppearThumbnail)
@@ -683,7 +683,7 @@ struct TrashDropZone: View {
             Image(systemName: isTargeted ? "trash.fill" : "trash")
                 .font(.system(size: 24))
                 .foregroundStyle(isTargeted ? .red : .secondary)
-            Text("拖此删除")
+            Text("Drop to delete")
                 .font(.caption)
                 .foregroundStyle(isTargeted ? .red : .secondary)
         }

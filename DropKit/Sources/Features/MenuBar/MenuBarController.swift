@@ -25,13 +25,13 @@ class MenuBarController {
         let menu = NSMenu()
 
         // 显示悬浮窗
-        let showShelfItem = NSMenuItem(title: "显示悬浮窗", action: #selector(showShelf), keyEquivalent: "s")
+        let showShelfItem = NSMenuItem(title: "Show Shelf", action: #selector(showShelf), keyEquivalent: "s")
         showShelfItem.keyEquivalentModifierMask = [.command, .shift]
         showShelfItem.target = self
         menu.addItem(showShelfItem)
 
         // 剪切板历史
-        let clipboardItem = NSMenuItem(title: "剪切板历史", action: #selector(showClipboardHistory), keyEquivalent: "v")
+        let clipboardItem = NSMenuItem(title: "Clipboard History", action: #selector(showClipboardHistory), keyEquivalent: "v")
         clipboardItem.keyEquivalentModifierMask = [.command, .shift]
         clipboardItem.target = self
         menu.addItem(clipboardItem)
@@ -39,19 +39,19 @@ class MenuBarController {
         menu.addItem(NSMenuItem.separator())
 
         // 设置
-        let settingsItem = NSMenuItem(title: "设置...", action: #selector(showSettings), keyEquivalent: ",")
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(showSettings), keyEquivalent: ",")
         settingsItem.target = self
         menu.addItem(settingsItem)
 
         // 关于
-        let aboutItem = NSMenuItem(title: "关于 DropKit", action: #selector(showAbout), keyEquivalent: "")
+        let aboutItem = NSMenuItem(title: "About DropKit", action: #selector(showAbout), keyEquivalent: "")
         aboutItem.target = self
         menu.addItem(aboutItem)
 
         menu.addItem(NSMenuItem.separator())
 
         // 退出
-        let quitItem = NSMenuItem(title: "退出", action: #selector(quit), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
