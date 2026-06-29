@@ -24,14 +24,36 @@ VERSION="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 XCODE_PROJECT="$PROJECT_ROOT/DropKit/DropKit.xcodeproj"
+ENTITLEMENTS="$PROJECT_ROOT/DropKit/Sources/DropKit.entitlements"
 BUILD_DIR="$PROJECT_ROOT/build"
 RELEASES_DIR="$PROJECT_ROOT/releases"
 APP_NAME="DropKit"
 BUILD_LOG="$BUILD_DIR/xcodebuild-release.log"
+SIGNING_IDENTITY="${DROPKIT_SIGNING_IDENTITY:-}"
+ALLOW_AD_HOC="${DROPKIT_ALLOW_AD_HOC:-0}"
+
+if [ -z "$SIGNING_IDENTITY" ]; then
+    if [ "$ALLOW_AD_HOC" = "1" ]; then
+        SIGNING_IDENTITY="-"
+        CODE_SIGNING_REQUIRED_VALUE=NO
+        CODE_SIGNING_ALLOWED_VALUE=NO
+        SIGNING_DESCRIPTION="ad-hoc (DROPKIT_ALLOW_AD_HOC=1)"
+    else
+        echo -e "${RED}Error: DROPKIT_SIGNING_IDENTITY is required for release builds${NC}"
+        echo "Example: DROPKIT_SIGNING_IDENTITY=\"Developer ID Application: Example (TEAMID)\" ./build-release.sh $VERSION"
+        echo "For local unsigned testing only, set DROPKIT_ALLOW_AD_HOC=1."
+        exit 1
+    fi
+else
+    CODE_SIGNING_REQUIRED_VALUE=YES
+    CODE_SIGNING_ALLOWED_VALUE=YES
+    SIGNING_DESCRIPTION="$SIGNING_IDENTITY"
+fi
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  DropKit Release Build v${VERSION}${NC}"
 echo -e "${GREEN}========================================${NC}"
+echo -e "Signing identity: ${YELLOW}$SIGNING_DESCRIPTION${NC}"
 
 # Step 1: Clean previous build and remove extended attributes
 echo -e "\n${YELLOW}[1/5] Cleaning previous build...${NC}"
@@ -54,9 +76,9 @@ xcodebuild -project "$XCODE_PROJECT" \
     -derivedDataPath "$BUILD_DIR/DerivedData" \
     MARKETING_VERSION="$VERSION" \
     CURRENT_PROJECT_VERSION="$VERSION" \
-    CODE_SIGN_IDENTITY="-" \
-    CODE_SIGNING_REQUIRED=NO \
-    CODE_SIGNING_ALLOWED=NO \
+    CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+    CODE_SIGNING_REQUIRED="$CODE_SIGNING_REQUIRED_VALUE" \
+    CODE_SIGNING_ALLOWED="$CODE_SIGNING_ALLOWED_VALUE" \
     build >"$BUILD_LOG" 2>&1
 BUILD_STATUS=$?
 set -e
@@ -82,7 +104,12 @@ echo -e "${GREEN}Build completed successfully${NC}"
 # Step 3: Clean extended attributes from built app and re-sign
 echo -e "\n${YELLOW}[3/5] Preparing app for distribution...${NC}"
 xattr -cr "$APP_PATH"
-codesign --force --deep --sign - "$APP_PATH"
+codesign_args=(--force --deep --sign "$SIGNING_IDENTITY" --entitlements "$ENTITLEMENTS")
+if [ "$SIGNING_IDENTITY" != "-" ]; then
+    codesign_args+=(--options runtime)
+fi
+codesign "${codesign_args[@]}" "$APP_PATH"
+codesign --verify --deep --strict --verbose=2 "$APP_PATH"
 echo -e "${GREEN}App prepared and signed${NC}"
 
 # Step 4: Create ZIP
