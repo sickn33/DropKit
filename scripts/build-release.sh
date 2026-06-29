@@ -4,7 +4,7 @@
 # Usage: ./build-release.sh <version>
 # Example: ./build-release.sh 1.0.3
 
-set -e
+set -euo pipefail
 
 # Colors for output
 RED='\033[0;31m'
@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Check version argument
-if [ -z "$1" ]; then
+if [ -z "${1:-}" ]; then
     echo -e "${RED}Error: Version number required${NC}"
     echo "Usage: ./build-release.sh <version>"
     echo "Example: ./build-release.sh 1.0.3"
@@ -27,6 +27,7 @@ XCODE_PROJECT="$PROJECT_ROOT/DropKit/DropKit.xcodeproj"
 BUILD_DIR="$PROJECT_ROOT/build"
 RELEASES_DIR="$PROJECT_ROOT/releases"
 APP_NAME="DropKit"
+BUILD_LOG="$BUILD_DIR/xcodebuild-release.log"
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  DropKit Release Build v${VERSION}${NC}"
@@ -46,6 +47,7 @@ xattr -cr "$PROJECT_ROOT/DropKit" 2>/dev/null || true
 
 # Step 2: Build Release version (using build instead of archive)
 echo -e "\n${YELLOW}[2/5] Building Release version...${NC}"
+set +e
 xcodebuild -project "$XCODE_PROJECT" \
     -scheme "$APP_NAME" \
     -configuration Release \
@@ -55,7 +57,17 @@ xcodebuild -project "$XCODE_PROJECT" \
     CODE_SIGN_IDENTITY="-" \
     CODE_SIGNING_REQUIRED=NO \
     CODE_SIGNING_ALLOWED=NO \
-    build 2>&1 | grep -E "(Compiling|Linking|Build|error:|warning:)" || true
+    build >"$BUILD_LOG" 2>&1
+BUILD_STATUS=$?
+set -e
+
+grep -E "(Compiling|Linking|Build|error:|warning:)" "$BUILD_LOG" || true
+
+if [ "$BUILD_STATUS" -ne 0 ]; then
+    echo -e "${RED}Error: xcodebuild failed with status $BUILD_STATUS${NC}"
+    echo "Full build log: $BUILD_LOG"
+    exit "$BUILD_STATUS"
+fi
 
 # Find the built app
 APP_PATH="$BUILD_DIR/DerivedData/Build/Products/Release/$APP_NAME.app"
