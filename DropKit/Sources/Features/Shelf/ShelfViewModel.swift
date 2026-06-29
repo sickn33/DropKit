@@ -90,7 +90,7 @@ class ShelfViewModel {
         // 超出限制时移除最早的项（现在是数组末尾）
         while items.count > maxItems {
             let removed = items.removeLast()
-            removeFromCache(removed)
+            didRemoveItems([removed])
         }
 
         return true
@@ -103,15 +103,9 @@ class ShelfViewModel {
     }
 
     func removeItem(_ item: ShelfItem) {
-        // 取消缩略图加载任务（大图 + 小图）
-        cancelAllThumbnailTasks(for: item.id)
-        // 从缓存中移除
-        removeFromCache(item)
+        let removedItems = items.filter { $0.id == item.id }
         items.removeAll { $0.id == item.id }
-        // 如果清空了，回到收起状态
-        if items.isEmpty {
-            viewState = .collapsed
-        }
+        didRemoveItems(removedItems)
     }
 
     private func cancelAllThumbnailTasks(for itemId: UUID) {
@@ -132,21 +126,34 @@ class ShelfViewModel {
     func removeItems(byUrls urls: [URL]) {
         let urlSet = Set(urls)
         let itemsToRemove = items.filter { urlSet.contains($0.url) }
-        for item in itemsToRemove {
-            removeFromCache(item)
-        }
         items.removeAll { urlSet.contains($0.url) }
-        if items.isEmpty {
-            viewState = .collapsed
-        }
+        didRemoveItems(itemsToRemove)
     }
 
     func removeItem(at index: Int) {
         guard items.indices.contains(index) else { return }
-        removeFromCache(items[index])
-        items.remove(at: index)
+        let removedItem = items.remove(at: index)
+        didRemoveItems([removedItem])
+    }
+
+    private func didRemoveItems(_ removedItems: [ShelfItem]) {
+        guard !removedItems.isEmpty else { return }
+
+        let removedIds = Set(removedItems.map(\.id))
+        for item in removedItems {
+            cancelAllThumbnailTasks(for: item.id)
+            removeFromCache(item)
+        }
+
+        selectedItemIds.subtract(removedIds)
+        if let lastSelectedId, removedIds.contains(lastSelectedId) {
+            self.lastSelectedId = nil
+        }
+
         if items.isEmpty {
             viewState = .collapsed
+            selectedItemIds.removeAll()
+            lastSelectedId = nil
         }
     }
 
@@ -168,22 +175,19 @@ class ShelfViewModel {
         items.removeAll()
         fileIdentifiers.removeAll()
         fileNames.removeAll()
+        selectedItemIds.removeAll()
+        lastSelectedId = nil
         viewState = .collapsed
     }
 
     func deleteSelected() {
         let idsToRemove = selectedItemIds
-        for id in idsToRemove {
-            cancelAllThumbnailTasks(for: id)
-            if let item = items.first(where: { $0.id == id }) {
-                removeFromCache(item)
-            }
-        }
+        let removedItems = items.filter { idsToRemove.contains($0.id) }
         items.removeAll { idsToRemove.contains($0.id) }
-        selectedItemIds.removeAll()
-        lastSelectedId = nil
-        if items.isEmpty {
-            viewState = .collapsed
+        didRemoveItems(removedItems)
+        selectedItemIds.subtract(idsToRemove)
+        if let lastSelectedId, idsToRemove.contains(lastSelectedId) {
+            self.lastSelectedId = nil
         }
     }
 

@@ -130,6 +130,42 @@ final class DropKitTests: XCTestCase {
         viewModel.clearAll()
     }
 
+    func testRemovingShelfItemClearsSelectionState() throws {
+        let viewModel = ShelfViewModel()
+        let fileURL = try makeTemporaryFile()
+
+        XCTAssertTrue(viewModel.addItem(url: fileURL))
+        guard let item = viewModel.items.first else {
+            return XCTFail("Expected inserted item")
+        }
+
+        viewModel.toggleSelection(item.id, modifierFlags: NSEvent.ModifierFlags())
+        XCTAssertTrue(viewModel.isSelected(item))
+
+        viewModel.removeItem(item)
+
+        XCTAssertTrue(viewModel.items.isEmpty)
+        XCTAssertTrue(viewModel.selectedItemIds.isEmpty)
+    }
+
+    func testRemovingShelfItemsByURLClearsRemovedSelections() throws {
+        let viewModel = ShelfViewModel()
+        let firstURL = try makeTemporaryFile()
+        let secondURL = try makeTemporaryFile()
+
+        XCTAssertTrue(viewModel.addItem(url: firstURL))
+        XCTAssertTrue(viewModel.addItem(url: secondURL))
+        viewModel.selectAll()
+
+        viewModel.removeItems(byUrls: [firstURL])
+
+        XCTAssertEqual(viewModel.items.map(\.url), [secondURL])
+        XCTAssertEqual(viewModel.selectedItemIds, Set(viewModel.items.map(\.id)))
+
+        viewModel.clearAll()
+        XCTAssertTrue(viewModel.selectedItemIds.isEmpty)
+    }
+
     @MainActor
     func testThumbnailGenerationWorksForNewItemsByDefault() async throws {
         let viewModel = ShelfViewModel()
