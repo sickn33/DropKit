@@ -221,6 +221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         dragMonitor.stop()
         shakeDetector.stop()
+        clipboardMonitor.flushPendingSave()
         clipboardMonitor.stop()
         folderMonitor.stop()
     }

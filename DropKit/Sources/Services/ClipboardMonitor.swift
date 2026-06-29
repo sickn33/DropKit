@@ -18,6 +18,8 @@ class ClipboardMonitor {
     private var lastChangeCount: Int = 0
     private var timer: Timer?
     private var saveWorkItem: DispatchWorkItem?
+    private var saveGeneration: UInt64 = 0
+    private let saveQueue: DispatchQueue
 
     var searchText: String = "" {
         didSet { _filteredItemsCache = nil }
@@ -84,10 +86,16 @@ class ClipboardMonitor {
         )
     }
 
-    init() {
+    init(
+        storageURL: URL? = nil,
+        imagesDirectory: URL? = nil,
+        saveQueue: DispatchQueue = DispatchQueue(label: "DropKit.ClipboardMonitor.save", qos: .utility)
+    ) {
         let dirs = Self.setupDirectories()
-        self.storageURL = dirs.storageURL
-        self.imagesDirectory = dirs.imagesDirectory
+        self.storageURL = storageURL ?? dirs.storageURL
+        self.imagesDirectory = imagesDirectory ?? dirs.imagesDirectory
+        self.saveQueue = saveQueue
+        try? FileManager.default.createDirectory(at: self.imagesDirectory, withIntermediateDirectories: true)
         loadItems()
     }
 
@@ -101,6 +109,13 @@ class ClipboardMonitor {
     func stop() {
         timer?.invalidate()
         timer = nil
+    }
+
+    func flushPendingSave() {
+        saveGeneration &+= 1
+        saveWorkItem?.cancel()
+        saveWorkItem = nil
+        persistItems(items, waitUntilFinished: true)
     }
 
     private func checkClipboard() {
@@ -324,27 +339,40 @@ class ClipboardMonitor {
 
     private func saveItems() {
         // Debounce: 0.5 秒内的连续修改合并为一次写入
+        saveGeneration &+= 1
+        let generation = saveGeneration
         saveWorkItem?.cancel()
+        let itemsToSave = items
         let workItem = DispatchWorkItem { [weak self] in
-            guard let self = self else { return }
-            let itemsToSave = self.items
-            let url = self.storageURL
-            Task.detached(priority: .utility) {
-                do {
-                    let data = try JSONEncoder().encode(itemsToSave)
-                    try data.write(to: url, options: .atomic)
-                } catch {
-                    #if DEBUG
-                    print("Failed to save clipboard history: \(error)")
-                    #endif
-                }
-            }
+            guard let self = self, self.saveGeneration == generation else { return }
+            self.persistItems(itemsToSave)
         }
         saveWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
     }
 
+    private func persistItems(_ itemsToSave: [ClipboardItem], waitUntilFinished: Bool = false) {
+        let url = storageURL
+        let write = {
+            do {
+                let data = try JSONEncoder().encode(itemsToSave)
+                try data.write(to: url, options: .atomic)
+            } catch {
+                #if DEBUG
+                print("Failed to save clipboard history: \(error)")
+                #endif
+            }
+        }
+
+        if waitUntilFinished {
+            saveQueue.sync(execute: write)
+        } else {
+            saveQueue.async(execute: write)
+        }
+    }
+
     deinit {
+        flushPendingSave()
         stop()
     }
 }

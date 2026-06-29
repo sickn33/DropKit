@@ -119,6 +119,61 @@ final class DropKitTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: "watchedFolderBookmark"))
     }
 
+    func testFlushPendingSavePersistsLatestClipboardHistory() throws {
+        let directory = try makeTemporaryDirectory()
+        let storageURL = directory.appendingPathComponent("clipboard_history.json")
+        let imagesDirectory = directory.appendingPathComponent("ClipboardImages", isDirectory: true)
+        let storedItem = ClipboardItem(type: .text, content: "temporary clipboard")
+        try JSONEncoder().encode([storedItem]).write(to: storageURL)
+
+        let monitor = ClipboardMonitor(
+            storageURL: storageURL,
+            imagesDirectory: imagesDirectory,
+            saveQueue: DispatchQueue(label: "DropKitTests.ClipboardSave")
+        )
+
+        XCTAssertEqual(monitor.items.count, 1)
+
+        monitor.clearAll()
+        monitor.flushPendingSave()
+
+        let data = try Data(contentsOf: storageURL)
+        let savedItems = try JSONDecoder().decode([ClipboardItem].self, from: data)
+        XCTAssertTrue(savedItems.isEmpty)
+    }
+
+    func testFlushPreventsCanceledDebouncedSaveFromOverwritingLatestHistory() throws {
+        let directory = try makeTemporaryDirectory()
+        let storageURL = directory.appendingPathComponent("clipboard_history.json")
+        let imagesDirectory = directory.appendingPathComponent("ClipboardImages", isDirectory: true)
+        let storedItem = ClipboardItem(type: .text, content: "temporary clipboard")
+        try JSONEncoder().encode([storedItem]).write(to: storageURL)
+
+        let monitor = ClipboardMonitor(
+            storageURL: storageURL,
+            imagesDirectory: imagesDirectory,
+            saveQueue: DispatchQueue(label: "DropKitTests.ClipboardSave")
+        )
+
+        guard let item = monitor.items.first else {
+            return XCTFail("Expected loaded clipboard item")
+        }
+
+        monitor.toggleFavorite(item)
+        monitor.clearAll()
+        monitor.flushPendingSave()
+
+        let waitForCanceledWorkItems = expectation(description: "debounced work items had time to run")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+            waitForCanceledWorkItems.fulfill()
+        }
+        wait(for: [waitForCanceledWorkItems], timeout: 1.0)
+
+        let data = try Data(contentsOf: storageURL)
+        let savedItems = try JSONDecoder().decode([ClipboardItem].self, from: data)
+        XCTAssertTrue(savedItems.isEmpty)
+    }
+
     func testAddItemReturnsWhetherAFileWasInserted() throws {
         let viewModel = ShelfViewModel()
         let fileURL = try makeTemporaryFile()
@@ -212,22 +267,25 @@ final class DropKitTests: XCTestCase {
         return defaults
     }
 
-    private func makeTemporaryFile() throws -> URL {
+    private func makeTemporaryDirectory() throws -> URL {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let fileURL = directory.appendingPathComponent("screenshot.png")
-        try Data("dropkit".utf8).write(to: fileURL)
         addTeardownBlock {
             try? FileManager.default.removeItem(at: directory)
         }
+        return directory
+    }
+
+    private func makeTemporaryFile() throws -> URL {
+        let directory = try makeTemporaryDirectory()
+        let fileURL = directory.appendingPathComponent("screenshot.png")
+        try Data("dropkit".utf8).write(to: fileURL)
         return fileURL
     }
 
     private func makeTemporaryPNG() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let directory = try makeTemporaryDirectory()
         let fileURL = directory.appendingPathComponent("image.png")
 
         let image = NSImage(size: NSSize(width: 8, height: 8))
@@ -245,9 +303,6 @@ final class DropKitTests: XCTestCase {
         }
 
         try pngData.write(to: fileURL)
-        addTeardownBlock {
-            try? FileManager.default.removeItem(at: directory)
-        }
         return fileURL
     }
 
