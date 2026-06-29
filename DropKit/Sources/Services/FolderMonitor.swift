@@ -50,7 +50,9 @@ class FolderMonitor {
 
     /// 当前是否正在监听
     var isMonitoring: Bool {
-        source != nil
+        queue.sync {
+            source != nil
+        }
     }
 
     deinit {
@@ -59,13 +61,19 @@ class FolderMonitor {
 
     /// 开始监听指定文件夹
     func start(url: URL) {
+        queue.sync {
+            startMonitoring(url: url)
+        }
+    }
+
+    private func startMonitoring(url: URL) {
         // 如果已经在监听同一路径，不重复启动
         if watchedURL == url && source != nil {
             return
         }
 
         // 停止之前的监听
-        stop()
+        stopMonitoring()
 
         generation &+= 1
         watchedURL = url
@@ -81,7 +89,7 @@ class FolderMonitor {
             #if DEBUG
             print("FolderMonitor: 路径不存在或不是目录: \(url.path)")
             #endif
-            stop()
+            stopMonitoring()
             return
         }
 
@@ -94,7 +102,7 @@ class FolderMonitor {
             #if DEBUG
             print("FolderMonitor: 无法打开目录: \(url.path)")
             #endif
-            stop()
+            stopMonitoring()
             return
         }
 
@@ -109,11 +117,11 @@ class FolderMonitor {
             self?.handleFileSystemEvent()
         }
 
-        source?.setCancelHandler { [weak self] in
-            if let fd = self?.fileDescriptor, fd >= 0 {
-                close(fd)
+        let monitoredFileDescriptor = fileDescriptor
+        source?.setCancelHandler {
+            if monitoredFileDescriptor >= 0 {
+                close(monitoredFileDescriptor)
             }
-            self?.fileDescriptor = -1
         }
 
         source?.resume()
@@ -125,11 +133,18 @@ class FolderMonitor {
 
     /// 停止监听
     func stop() {
+        queue.sync {
+            stopMonitoring()
+        }
+    }
+
+    private func stopMonitoring() {
         let currentWatchedURL = watchedURL
         generation &+= 1
         eventDebouncer.cancel()
         source?.cancel()
         source = nil
+        fileDescriptor = -1
         watchedURL = nil
         knownFiles.removeAll()
         if isAccessingSecurityScopedResource {
@@ -192,9 +207,15 @@ class FolderMonitor {
 
             // 在主线程回调前再次校验 generation
             DispatchQueue.main.async { [weak self] in
-                guard let self, self.generation == expectedGen else { return }
+                guard let self, self.isCurrentGeneration(expectedGen) else { return }
                 self.onNewFile?(fileURL)
             }
+        }
+    }
+
+    private func isCurrentGeneration(_ expectedGen: UInt64) -> Bool {
+        queue.sync {
+            generation == expectedGen
         }
     }
 

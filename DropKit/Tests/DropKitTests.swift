@@ -119,6 +119,23 @@ final class DropKitTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: "watchedFolderBookmark"))
     }
 
+    func testFolderMonitorStartStopUpdatesMonitoringState() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: directory)
+        }
+
+        let monitor = FolderMonitor()
+
+        monitor.start(url: directory)
+        XCTAssertTrue(monitor.isMonitoring)
+
+        monitor.stop()
+        XCTAssertFalse(monitor.isMonitoring)
+    }
+
     func testAddItemReturnsWhetherAFileWasInserted() throws {
         let viewModel = ShelfViewModel()
         let fileURL = try makeTemporaryFile()
