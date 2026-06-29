@@ -183,7 +183,7 @@ struct SettingsView: View {
             } header: {
                 Text("历史记录")
             } footer: {
-                Text("输入 0 表示永久保留，仅统计和删除未收藏条目")
+                Text("默认保留 30 天、最多 100 条。输入 0 表示永久保留，仅统计和删除未收藏条目")
             }
 
             Section {

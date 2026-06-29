@@ -56,6 +56,41 @@ final class DropKitTests: XCTestCase {
         XCTAssertTrue(settings.isBlacklisted("com.example.Notes"))
     }
 
+    func testClipboardHistoryUsesBoundedDefaults() throws {
+        let defaults = try makeDefaults()
+        let settings = AppSettings(
+            defaults: defaults,
+            launchAtLoginManager: StubLaunchAtLoginManager(),
+            bookmarkStore: FolderBookmarkStore(
+                defaults: defaults,
+                key: "watchedFolderBookmark",
+                bookmarkProvider: StubBookmarkProvider()
+            )
+        )
+
+        XCTAssertEqual(settings.clipboardRetentionDays, AppSettings.defaultClipboardRetentionDays)
+        XCTAssertEqual(settings.clipboardMaxItems, AppSettings.defaultClipboardMaxItems)
+    }
+
+    func testClipboardHistoryAllowsExplicitPermanentRetention() throws {
+        let defaults = try makeDefaults()
+        defaults.set(0, forKey: "clipboardRetentionDays")
+        defaults.set(0, forKey: "clipboardMaxItems")
+
+        let settings = AppSettings(
+            defaults: defaults,
+            launchAtLoginManager: StubLaunchAtLoginManager(),
+            bookmarkStore: FolderBookmarkStore(
+                defaults: defaults,
+                key: "watchedFolderBookmark",
+                bookmarkProvider: StubBookmarkProvider()
+            )
+        )
+
+        XCTAssertEqual(settings.clipboardRetentionDays, 0)
+        XCTAssertEqual(settings.clipboardMaxItems, 0)
+    }
+
     func testSettingWatchedFolderPersistsBookmarkAndResolvedPath() throws {
         let defaults = try makeDefaults()
         let bookmarkProvider = StubBookmarkProvider()

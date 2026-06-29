@@ -3,6 +3,8 @@ import AppKit
 @Observable
 class AppSettings {
     static let shared = AppSettings()
+    static let defaultClipboardRetentionDays = 30
+    static let defaultClipboardMaxItems = 100
 
     private enum Keys {
         static let shakeMinShakes = "shakeMinShakes"
@@ -163,11 +165,15 @@ class AppSettings {
         let storedMovement = defaults.double(forKey: Keys.shakeMinMovement)
         shakeMinMovement = storedMovement != 0 ? storedMovement : 30
 
-        // clipboardRetentionDays 默认 0 = 永久保存
-        clipboardRetentionDays = defaults.integer(forKey: Keys.clipboardRetentionDays)
+        // 新用户默认有限保留；显式设置 0 时仍表示永久保存。
+        clipboardRetentionDays = defaults.object(forKey: Keys.clipboardRetentionDays) == nil
+            ? Self.defaultClipboardRetentionDays
+            : defaults.integer(forKey: Keys.clipboardRetentionDays)
 
-        // clipboardMaxItems 默认 0 = 永久保存
-        clipboardMaxItems = defaults.integer(forKey: Keys.clipboardMaxItems)
+        // 新用户默认有限条数；显式设置 0 时仍表示永久保存。
+        clipboardMaxItems = defaults.object(forKey: Keys.clipboardMaxItems) == nil
+            ? Self.defaultClipboardMaxItems
+            : defaults.integer(forKey: Keys.clipboardMaxItems)
 
         // ignoreConcealed 默认 true（安全起见）
         ignoreConcealed = defaults.object(forKey: Keys.ignoreConcealed) == nil ? true : defaults.bool(forKey: Keys.ignoreConcealed)
