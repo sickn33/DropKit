@@ -146,6 +146,65 @@ final class DropKitTests: XCTestCase {
         XCTAssertNotNil(viewModel.items.first?.thumbnail)
     }
 
+    func testClearAllDeletesStoredClipboardImagesAndOrphans() throws {
+        let directory = try makeTemporaryDirectory()
+        let imagesDirectory = directory.appendingPathComponent("ClipboardImages", isDirectory: true)
+        try FileManager.default.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
+
+        let storedImage = imagesDirectory.appendingPathComponent("stored.png")
+        let orphanedImage = imagesDirectory.appendingPathComponent("orphaned.png")
+        let externalImage = directory.appendingPathComponent("external.png")
+
+        try Data("stored".utf8).write(to: storedImage)
+        try Data("orphaned".utf8).write(to: orphanedImage)
+        try Data("external".utf8).write(to: externalImage)
+
+        let storageURL = directory.appendingPathComponent("clipboard_history.json")
+        let items = [
+            ClipboardItem(type: .image, content: storedImage.path),
+            ClipboardItem(type: .image, content: externalImage.path)
+        ]
+        try JSONEncoder().encode(items).write(to: storageURL)
+
+        let monitor = ClipboardMonitor(storageURL: storageURL, imagesDirectory: imagesDirectory)
+        XCTAssertEqual(monitor.items.count, 2)
+
+        monitor.clearAll()
+
+        XCTAssertTrue(monitor.items.isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storedImage.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: orphanedImage.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: externalImage.path))
+    }
+
+    func testRemovingDuplicateImageReferenceKeepsFileUntilLastReferenceIsRemoved() throws {
+        let directory = try makeTemporaryDirectory()
+        let imagesDirectory = directory.appendingPathComponent("ClipboardImages", isDirectory: true)
+        try FileManager.default.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
+
+        let storedImage = imagesDirectory.appendingPathComponent("stored.png")
+        try Data("stored".utf8).write(to: storedImage)
+
+        let storageURL = directory.appendingPathComponent("clipboard_history.json")
+        let items = [
+            ClipboardItem(type: .image, content: storedImage.path),
+            ClipboardItem(type: .image, content: storedImage.path)
+        ]
+        try JSONEncoder().encode(items).write(to: storageURL)
+
+        let monitor = ClipboardMonitor(storageURL: storageURL, imagesDirectory: imagesDirectory)
+        XCTAssertEqual(monitor.items.count, 2)
+
+        monitor.removeItem(monitor.items[0])
+
+        XCTAssertEqual(monitor.items.count, 1)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: storedImage.path))
+
+        monitor.clearAll()
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: storedImage.path))
+    }
+
     func testLatestWorkDebouncerRunsOnlyMostRecentScheduledWork() {
         let debouncer = LatestWorkDebouncer()
         let queue = DispatchQueue(label: "DropKitTests.LatestWorkDebouncer")
@@ -213,21 +272,14 @@ final class DropKitTests: XCTestCase {
     }
 
     private func makeTemporaryFile() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let directory = try makeTemporaryDirectory()
         let fileURL = directory.appendingPathComponent("screenshot.png")
         try Data("dropkit".utf8).write(to: fileURL)
-        addTeardownBlock {
-            try? FileManager.default.removeItem(at: directory)
-        }
         return fileURL
     }
 
     private func makeTemporaryPNG() throws -> URL {
-        let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let directory = try makeTemporaryDirectory()
         let fileURL = directory.appendingPathComponent("image.png")
 
         let image = NSImage(size: NSSize(width: 8, height: 8))
@@ -245,10 +297,17 @@ final class DropKitTests: XCTestCase {
         }
 
         try pngData.write(to: fileURL)
+        return fileURL
+    }
+
+    private func makeTemporaryDirectory() throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("DropKitTests.\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         addTeardownBlock {
             try? FileManager.default.removeItem(at: directory)
         }
-        return fileURL
+        return directory
     }
 
     private func waitForMainQueueTurn() async {

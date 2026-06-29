@@ -84,10 +84,10 @@ class ClipboardMonitor {
         )
     }
 
-    init() {
+    init(storageURL: URL? = nil, imagesDirectory: URL? = nil) {
         let dirs = Self.setupDirectories()
-        self.storageURL = dirs.storageURL
-        self.imagesDirectory = dirs.imagesDirectory
+        self.storageURL = storageURL ?? dirs.storageURL
+        self.imagesDirectory = imagesDirectory ?? dirs.imagesDirectory
         loadItems()
     }
 
@@ -220,6 +220,8 @@ class ClipboardMonitor {
     }
 
     private func cleanupExpiredItems() {
+        let previousItems = items
+
         // 按天数清理（收藏的不删除）
         let days = effectiveRetentionDays
         if days > 0 {
@@ -237,6 +239,8 @@ class ClipboardMonitor {
             nonFavorites = Array(nonFavorites.prefix(allowedNonFavorites))
             items = (favorites + nonFavorites).sorted { $0.timestamp > $1.timestamp }
         }
+
+        deleteImageFiles(for: removedItems(from: previousItems))
 
         // 清理孤立的图片文件（节流：每 50 次或每 10 分钟）
         cleanupOrphanedImagesIfNeeded()
@@ -298,13 +302,44 @@ class ClipboardMonitor {
     }
 
     func removeItem(_ item: ClipboardItem) {
+        let removedItems = items.filter { $0.id == item.id }
         items.removeAll { $0.id == item.id }
+        deleteImageFiles(for: removedItems)
         saveItems()
     }
 
     func clearAll() {
+        let removedItems = items
         items.removeAll()
+        deleteImageFiles(for: removedItems)
+        cleanupOrphanedImages()
         saveItems()
+    }
+
+    private func removedItems(from previousItems: [ClipboardItem]) -> [ClipboardItem] {
+        let currentIDs = Set(items.map(\.id))
+        return previousItems.filter { !currentIDs.contains($0.id) }
+    }
+
+    private func deleteImageFiles(for removedItems: [ClipboardItem]) {
+        let activeImagePaths = Set(items.compactMap { savedImageURL(for: $0)?.path })
+
+        for item in removedItems {
+            guard let fileURL = savedImageURL(for: item) else { continue }
+            guard !activeImagePaths.contains(fileURL.path) else { continue }
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+    }
+
+    private func savedImageURL(for item: ClipboardItem) -> URL? {
+        guard item.type == .image else { return nil }
+
+        let imageURL = URL(fileURLWithPath: item.content).standardizedFileURL
+        let directoryURL = imagesDirectory.standardizedFileURL
+        let directoryPath = directoryURL.path.hasSuffix("/") ? directoryURL.path : directoryURL.path + "/"
+
+        guard imageURL.path.hasPrefix(directoryPath) else { return nil }
+        return imageURL
     }
 
     // MARK: - Persistence
